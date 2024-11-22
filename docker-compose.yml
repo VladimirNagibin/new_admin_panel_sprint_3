@@ -1,0 +1,48 @@
+version: '3'
+
+#volumes:
+  #esdata:
+
+services:
+  elasticsearch:
+    container_name: movies-search
+    image: elasticsearch:8.6.2
+    volumes: # Persist ES data in seperate "esdata" volume
+    #  - esdata:/usr/share/elasticsearch/data
+    #  - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./elasticsearch/data:/usr/share/elasticsearch/data:rw
+    environment:
+      #- bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+
+  init_elasticsearch:
+    container_name: init-movies-search
+    build:
+      context: elasticsearch/
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  theatre-db:
+    container_name: theatre-db
+    image: postgres:14
+    restart: always
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data/
+      - ./postgres/database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      start_period: 10s    
