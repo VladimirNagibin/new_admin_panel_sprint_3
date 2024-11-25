@@ -4,9 +4,8 @@ from typing import Generator
 
 from psycopg import Connection, sql
 
+from config import BATCH_SIZE
 from models import FilmworkElastic, IdModified
-
-BATCH_SIZE = 100
 
 
 class PostgresExtracter:

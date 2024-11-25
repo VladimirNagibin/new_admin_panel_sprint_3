@@ -13,5 +13,4 @@ class ElasticLoader():
             )
             bulk_data.append(document)
             #  re, res = bulk(e, bulk_data)
-            r = self.elastic.bulk(index='movies', body=bulk_data)
-            # print(r)
+            self.elastic.bulk(index='movies', body=bulk_data)

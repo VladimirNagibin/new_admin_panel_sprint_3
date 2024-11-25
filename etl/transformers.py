@@ -2,7 +2,7 @@ from models import FilmworkElastic
 
 
 class TransformToElastic():
-    
+
     @staticmethod
     def transform(films: list[FilmworkElastic]):
         films_for_elastic = []

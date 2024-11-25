@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     sql_port: int
     elastic_host: str
 
-
 BATCH_SIZE = 100
 
 settings = Settings()

@@ -2,7 +2,6 @@ import sqlite3
 import uuid
 from datetime import date, datetime
 
-#from dateutil import parser
 from pydantic import BaseModel, Field, field_validator
 
 #from logger import logger
