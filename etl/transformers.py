@@ -11,6 +11,8 @@ class TransformToElastic():
             film_data = [film for film in films if film.fw_id == film_id]
             if film_data:
                 film_for_elastic = {
+                    '_index': 'movies',
+                    '_id': str(film_data[0].fw_id),
                     'id': str(film_data[0].fw_id),
                     'imdb_rating': film_data[0].rating,
                     'genres': [],

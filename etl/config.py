@@ -12,10 +12,13 @@ class Settings(BaseSettings):
     sql_host: str
     sql_port: int
     elastic_host: str
+    batch_size: int
+    file_storage: str
 
-BATCH_SIZE = 100
 
 settings = Settings()
+
+BATCH_SIZE = settings.batch_size
 
 DSL = {
     'dbname': settings.postgres_db,
@@ -24,3 +27,5 @@ DSL = {
     'host': settings.sql_host,
     'port': settings.sql_port,
 }
+
+TABLES = ('film_work', 'person', 'genre')

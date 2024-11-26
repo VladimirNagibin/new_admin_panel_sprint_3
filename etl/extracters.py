@@ -9,12 +9,18 @@ from models import FilmworkElastic, IdModified
 
 
 class PostgresExtracter:
-    def __init__(self, conn: Connection) -> None:
+    def __init__(self, conn: Connection,
+                 last_modified: datetime | None = None) -> None:
         self.conn = conn
+        self.last_modified = last_modified
 
-    def get_id_modified(
-            self, table: str, modified: datetime
-    ) -> Generator[list[dict], None, None]:
+    def set_last_modified(self, modified: datetime) -> None:
+        self.last_modified = modified
+
+    def get_last_modified(self) -> datetime | None:
+        return self.last_modified
+
+    def get_id_modified(self, table: str) -> Generator[list[dict], None, None]:
         """Get all id, modified from table with modified > modified"""
         with closing(self.conn.cursor()) as pg_cursor:
             query = sql.SQL(
@@ -24,13 +30,13 @@ class PostgresExtracter:
                 'ORDER BY modified'
             ).format(
                 table=sql.Identifier(table),
-                modified=modified,
+                modified=self.last_modified,
             )
             pg_cursor.execute(query)
             while results := pg_cursor.fetchmany(BATCH_SIZE):
                 yield results
 
-    def get_all_id_modified(
+    def get_film_work_id_modified(
             self, table: str, records: list[IdModified]
     ) -> Generator[list[dict], None, None]:
         """Get id, modified from film_work"""
@@ -45,37 +51,35 @@ class PostgresExtracter:
             while results := pg_cursor.fetchmany(BATCH_SIZE):
                 yield results
 
-    def transform_id_modified(seif, data: list[dict]) -> list[IdModified]:
+    @staticmethod
+    def transform_id_modified(
+            data: list[dict], cls: IdModified | FilmworkElastic
+         ) -> list[IdModified | FilmworkElastic]:
         """Transform dict in pydentic class"""
         records = []
         for record in data:
-            records.append(IdModified(**record))
-        return records
-
-    def transform_filmwork(seif, data: list[dict]) -> list[FilmworkElastic]:
-        """Transform dict in pydentic class"""
-        records = []
-        for record in data:
-            records.append(FilmworkElastic(**record))
+            records.append(cls(**record))
         return records
 
     def get_id_modified_for_load(
-            self, table: str, modified: datetime
-    ) -> Generator[list[IdModified], None, None]:
+            self, table: str
+         ) -> Generator[list[IdModified], None, None]:
         """Get id, modified from updated film_work"""
-        for batch in self.get_id_modified(table, modified):
-            records = self.transform_id_modified(batch)
+        for batch in self.get_id_modified(table):
+            records = self.transform_id_modified(batch, IdModified)
+            self.set_last_modified(records[-1].modified)
             if table == 'film_work':
                 yield records
             else:
-                for batch_films in self.get_all_id_modified(table, records):
-                    yield self.transform_id_modified(batch_films)
+                for batch_films in self.get_film_work_id_modified(table,
+                                                                  records):
+                    yield self.transform_id_modified(batch_films, IdModified)
 
     def get_all_data(
-            self, table: str, modified: datetime
-    ):# -> list[FilmworkElastic]:
-        """Get id, modified from updated film_work"""
-        for batch in self.get_id_modified_for_load(table, modified):
+            self, table: str
+         ) -> Generator[list[FilmworkElastic], None, None]:
+        """Get all data for updated film_work"""
+        for batch in self.get_id_modified_for_load(table):
             with closing(self.conn.cursor()) as pg_cursor:
                 query = ('SELECT '
                          'fw.id as fw_id,'
@@ -100,4 +104,4 @@ class PostgresExtracter:
                          'WHERE fw.id = ANY(%s)')
                 pg_cursor.execute(query, [[record.id for record in batch]])
                 res = pg_cursor.fetchall()
-                yield self.transform_filmwork(res)
+                yield self.transform_id_modified(res, FilmworkElastic)
