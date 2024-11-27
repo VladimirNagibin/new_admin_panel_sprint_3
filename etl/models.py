@@ -1,27 +1,17 @@
-import sqlite3
 import uuid
-from datetime import date, datetime
+from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel
 
-#from logger import logger
+from config import settings
 
 
 class IdModified(BaseModel):
     id: uuid.UUID
     modified: datetime
-    
-    #@classmethod
-    #def get_values(cls, d: sqlite3.Row) -> tuple:
-    #    try:
-    #        item = cls(**dict(d))
-    #        return tuple(dict(item).values())
-    #    except TypeError as error:
-    #        logger.error('Ошибка создания объекта %s: %s', dict(d), error)
-    #        raise error
 
 
-class FilmworkElastic(BaseModel):
+class Filmwork(BaseModel):
     fw_id: uuid.UUID
     title: str
     description: str | None
@@ -33,3 +23,24 @@ class FilmworkElastic(BaseModel):
     id: uuid.UUID | None
     full_name: str | None
     name: str | None
+
+
+#class Person(BaseModel):
+#    id: uuid.UUID
+#    name: str
+
+
+class FilmworkElastic(BaseModel):
+    #_index: str = settings.index
+    #_id: uuid.UUID
+    id: uuid.UUID
+    imdb_rating: float | None
+    genres: list[str]
+    title: str
+    description: str | None
+    directors_names: list[str]
+    actors_names: list[str]
+    writers_names: list[str]
+    directors: list[dict[str, str]]
+    actors: list[dict[str, str]]
+    writers: list[dict[str, str]]

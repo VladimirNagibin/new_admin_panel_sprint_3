@@ -1,23 +1,25 @@
-from models import FilmworkElastic
+from config import settings
+from models import Filmwork, FilmworkElastic
 
 
-class TransformToElastic():
+class TransformDataToElastic():
 
     @staticmethod
-    def transform(films: list[FilmworkElastic]):
+    def transform(films: list[Filmwork]) -> list[FilmworkElastic]:
         films_for_elastic = []
         films_ids_unique = {film.fw_id for film in films}
         for film_id in films_ids_unique:
             film_data = [film for film in films if film.fw_id == film_id]
             if film_data:
+                film_detail = film_data[0]
                 film_for_elastic = {
-                    '_index': 'movies',
-                    '_id': str(film_data[0].fw_id),
-                    'id': str(film_data[0].fw_id),
-                    'imdb_rating': film_data[0].rating,
+                    '_index': settings.index,
+                    '_id': film_id,
+                    'id': film_id,
+                    'imdb_rating': film_detail.rating,
                     'genres': [],
-                    'title': film_data[0].title,
-                    'description': film_data[0].description,
+                    'title': film_detail.title,
+                    'description': film_detail.description,
                     'directors_names': [],
                     'actors_names': [],
                     'writers_names': [],
@@ -40,5 +42,11 @@ class TransformToElastic():
                             film_for_elastic[f'{role}s'].append(
                                 {'id': str(id), 'name': full_name}
                             )
+        #    fw = FilmworkElastic(**film_for_elastic)
+            #print(fw)
+        #    print('================================================')
+            #print(fw.model_dump_json())
+        #    res = {'_index': settings.index, '_id': film_id, } | fw.model_dump_json()
+        #    print(res)
             films_for_elastic.append(film_for_elastic)
         return films_for_elastic

@@ -1,5 +1,3 @@
-from typing import Type
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,7 +12,7 @@ class Settings(BaseSettings):
     elastic_host: str
     batch_size: int
     file_storage: str
-
+    index: str
 
 settings = Settings()
 

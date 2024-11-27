@@ -1,49 +1,36 @@
 import abc
 import json
-#from redis import Redis
 from typing import Any, Dict
 
 
 class BaseStorage(abc.ABC):
-    """Абстрактное хранилище состояния.
-
-    Позволяет сохранять и получать состояние.
-    Способ хранения состояния может варьироваться в зависимости
-    от итоговой реализации. Например, можно хранить информацию
-    в базе данных или в распределённом файловом хранилище.
-    """
+    """Abstract state storage."""
 
     @abc.abstractmethod
     def save_state(self, state: Dict[str, Any]) -> None:
-        """Сохранить состояние в хранилище."""
+        """Save the state to the storage."""
 
     @abc.abstractmethod
     def retrieve_state(self) -> Dict[str, Any]:
-        """Получить состояние из хранилища."""
-
-#class RedisStorage(BaseStorage):
-#    """Реализация хранилища, использующего Redis."""
-    
-#    def __init__(self, redis: Redis):
-#        self._redis = redis
+        """Get the state from the storage."""
 
 
 class JsonFileStorage(BaseStorage):
-    """Реализация хранилища, использующего локальный файл.
+    """Implementation of a storage using a local file.
 
-    Формат хранения: JSON
+    Storage format: JSON
     """
 
     def __init__(self, file_path: str) -> None:
         self.file_path = file_path
 
     def save_state(self, state: Dict[str, Any]) -> None:
-        """Сохранить состояние в хранилище."""
+        """Save the state to the storage."""
         with open(self.file_path, 'w', encoding='utf-8') as f:
             json.dump(state, f)
 
     def retrieve_state(self) -> Dict[str, Any]:
-        """Получить состояние из хранилища."""
+        """Get the state from the storage."""
         try:
             with open(self.file_path, 'r', encoding='utf-8') as f:
                 state = json.load(f)
@@ -53,18 +40,18 @@ class JsonFileStorage(BaseStorage):
 
 
 class State:
-    """Класс для работы с состояниями."""
+    """Class for working with states."""
 
     def __init__(self, storage: BaseStorage) -> None:
         self.storage = storage
 
     def set_state(self, key: str, value: Any) -> None:
-        """Установить состояние для определённого ключа."""
+        """Set the state for a key."""
         state = self.storage.retrieve_state()
         state[key] = value
         self.storage.save_state(state)
 
     def get_state(self, key: str, default: Any) -> Any:
-        """Получить состояние по определённому ключу."""
+        """Get the state for a key."""
         state = self.storage.retrieve_state()
         return state.get(key, default)

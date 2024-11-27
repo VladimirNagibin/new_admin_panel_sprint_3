@@ -2,3 +2,5 @@ data/
 .env
 venv/
 __pycache__/
+logs/
+json_file_storage.json
