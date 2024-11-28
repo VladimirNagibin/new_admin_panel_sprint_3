@@ -45,8 +45,8 @@ class PostgresExtracter:
             table=sql.Identifier(table),
             modified=self.last_modified,
         )
-        logger.info(f'Get id, modified from {table} updated '
-                    f'after {self.last_modified}')
+        logger.debug(f'Get id, modified from {table} updated '
+                     f'after {self.last_modified}')
         return self.get_data(query)
 
     def get_film_work_id_modified(
@@ -62,8 +62,8 @@ class PostgresExtracter:
                  'ON tfw.film_work_id = fw.id '
                  f'WHERE tfw.{table}_id = ANY(%s) '
                  'ORDER BY fw.modified')
-        logger.info('Get id, modified from film_work for update '
-                    f'which related to {table}')
+        logger.debug('Get id, modified from film_work for update '
+                     f'which related to {table}')
         return self.get_data(query,
                              params=[[record.id for record in records]])
 

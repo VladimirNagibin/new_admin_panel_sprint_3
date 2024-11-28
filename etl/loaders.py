@@ -16,16 +16,18 @@ class ElasticLoader():
     @backoff(exceptions=(ConnectionError, ConnectionTimeout))
     def load_data(self, data: list[dict]):
         """Loading data to elasticsearch."""
-        logger.info(f'Start loading to elastic a batch of {len(data)} items')
+        logger.debug(f'Start loading to elastic a batch of {len(data)} items')
         try:
             success, failed = bulk(self.elastic, data, index=self.index)
+            logger.debug(f'Successfully uploaded {success}, failed {failed}')
+            return success
         except (ApiError, BulkIndexError) as e:
             raise e
-        logger.info(f'Successfully uploaded {success}, failed {failed}')
 
     @backoff(exceptions=(ConnectionError, ConnectionTimeout))
     def check_index(self):
         """Check index and create if not exist"""
+        logger.info('Start checking elastic index ...')
         if not self.elastic.indices.exists(index=self.index):
             logger.info(f'Try to create elastic index {self.index}')
             index_scheme = get_dict_from_file(settings.file_index_scheme)

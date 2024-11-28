@@ -74,7 +74,6 @@ def backoff(exceptions: Tuple[Exception, ...] | Exception,
                 except exceptions:
                     delay = min(start_sleep_time * (factor ** n),
                                 border_sleep_time) + random.uniform(0, jitter)
-                    print(delay)
                     sleep(delay)
                     n += 1
         return inner
@@ -85,7 +84,6 @@ def get_dict_from_file(file_path):
     """Get dict from json file."""
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            result = json.load(f)
+            return json.load(f)
     except (json.JSONDecodeError, FileNotFoundError) as e:
         raise e
-    return result
