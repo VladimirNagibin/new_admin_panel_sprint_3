@@ -1,6 +1,9 @@
 import abc
 import json
-from typing import Any, Dict
+import random
+from functools import wraps
+from time import sleep
+from typing import Any, Dict, Tuple
 
 
 class BaseStorage(abc.ABC):
@@ -55,3 +58,34 @@ class State:
         """Get the state for a key."""
         state = self.storage.retrieve_state()
         return state.get(key, default)
+
+
+def backoff(exceptions: Tuple[Exception, ...] | Exception,
+            start_sleep_time=0.1, factor=2, border_sleep_time=10, jitter=0.1):
+    """Function to re-execute the function after a while if an error occurs."""
+    def func_wrapper(func):
+
+        @wraps(func)
+        def inner(*args, **kwargs):
+            n = 0
+            while True:
+                try:
+                    return func(*args, **kwargs)
+                except exceptions:
+                    delay = min(start_sleep_time * (factor ** n),
+                                border_sleep_time) + random.uniform(0, jitter)
+                    print(delay)
+                    sleep(delay)
+                    n += 1
+        return inner
+    return func_wrapper
+
+
+def get_dict_from_file(file_path):
+    """Get dict from json file."""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            result = json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError) as e:
+        raise e
+    return result

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     batch_size: int
     file_storage: str
     index: str
+    file_index_scheme: str
 
 settings = Settings()
 

@@ -3,8 +3,6 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from config import settings
-
 
 class IdModified(BaseModel):
     id: uuid.UUID
@@ -25,22 +23,20 @@ class Filmwork(BaseModel):
     name: str | None
 
 
-#class Person(BaseModel):
-#    id: uuid.UUID
-#    name: str
+class Person(BaseModel):
+    id: uuid.UUID
+    name: str
 
 
 class FilmworkElastic(BaseModel):
-    #_index: str = settings.index
-    #_id: uuid.UUID
     id: uuid.UUID
     imdb_rating: float | None
-    genres: list[str]
+    genres: list[str] = []
     title: str
     description: str | None
-    directors_names: list[str]
-    actors_names: list[str]
-    writers_names: list[str]
-    directors: list[dict[str, str]]
-    actors: list[dict[str, str]]
-    writers: list[dict[str, str]]
+    directors_names: list[str] = []
+    actors_names: list[str] = []
+    writers_names: list[str] = []
+    directors: list[Person] = []
+    actors: list[Person] = []
+    writers: list[Person] = []

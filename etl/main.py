@@ -3,7 +3,6 @@ from datetime import datetime as dt
 from time import sleep
 
 import psycopg
-import backoff
 from elasticsearch import Elasticsearch
 from psycopg import ClientCursor
 from psycopg.rows import dict_row
@@ -12,13 +11,13 @@ from config import DSL, settings, TABLES
 from extracters import PostgresExtracter
 from loaders import ElasticLoader
 from logger import logger
-from states import JsonFileStorage, State
+from services import backoff, JsonFileStorage, State
 from transformers import TransformDataToElastic
 
 
 def load_to_elastic(postgres_extracter: PostgresExtracter,
                     elastic_loader: ElasticLoader, state: State):
-    """Uploading updates to elastic based on updates in tables."""
+    """Loading updates to elastic based on updates in tables."""
     for table in TABLES:
         modified = dt.fromisoformat(
             state.get_state(table, dt.min.isoformat())
@@ -33,8 +32,7 @@ def load_to_elastic(postgres_extracter: PostgresExtracter,
                         postgres_extracter.get_last_modified().isoformat())
 
 
-@backoff.on_exception(backoff.expo, psycopg.errors.OperationalError,
-                      max_time=600)
+@backoff(exceptions=psycopg.errors.OperationalError)
 def get_pgconnection(**DSL):
     logger.info(f'Connecting to DB: {DSL["dbname"]}')
     return psycopg.connect(**DSL, row_factory=dict_row,

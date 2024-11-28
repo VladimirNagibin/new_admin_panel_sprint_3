@@ -1,52 +1,54 @@
+from typing import Any
+
 from config import settings
-from models import Filmwork, FilmworkElastic
+from models import Filmwork, FilmworkElastic, Person
 
 
 class TransformDataToElastic():
 
     @staticmethod
-    def transform(films: list[Filmwork]) -> list[FilmworkElastic]:
+    def check_attr(fw_elastic: FilmworkElastic, attr_name: str, val: Any):
+        """Checking attribute for addition."""
+        try:
+            attr = getattr(fw_elastic, attr_name)
+        except AttributeError as e:
+            raise e
+        if val not in attr:
+            attr.append(val)
+            return True
+
+    @staticmethod
+    def transform(films: list[Filmwork]) -> list[dict]:
+        """Transformation data for elastic."""
         films_for_elastic = []
         films_ids_unique = {film.fw_id for film in films}
         for film_id in films_ids_unique:
             film_data = [film for film in films if film.fw_id == film_id]
             if film_data:
                 film_detail = film_data[0]
-                film_for_elastic = {
-                    '_index': settings.index,
-                    '_id': film_id,
-                    'id': film_id,
-                    'imdb_rating': film_detail.rating,
-                    'genres': [],
-                    'title': film_detail.title,
-                    'description': film_detail.description,
-                    'directors_names': [],
-                    'actors_names': [],
-                    'writers_names': [],
-                    'directors': [],
-                    'actors': [],
-                    'writers': [],
-                }
+                fw_elastic = FilmworkElastic(
+                    id=film_id,
+                    imdb_rating=film_detail.rating,
+                    title=film_detail.title,
+                    description=film_detail.description,
+                )
                 for film_detail in film_data:
                     name = film_detail.name
                     role = film_detail.role
-                    id = film_detail.id
                     full_name = film_detail.full_name
-                    if name not in film_for_elastic['genres']:
-                        film_for_elastic['genres'].append(name)
+                    TransformDataToElastic.check_attr(fw_elastic,
+                                                      'genres', name)
                     if role:
-                        if full_name not in film_for_elastic[f'{role}s_names']:
-                            film_for_elastic[f'{role}s_names'].append(
-                                full_name
+                        if TransformDataToElastic.check_attr(
+                            fw_elastic, f'{role}s_names', full_name
+                        ):
+                            TransformDataToElastic.check_attr(
+                                fw_elastic, f'{role}s',
+                                Person(id=film_detail.id, name=full_name)
                             )
-                            film_for_elastic[f'{role}s'].append(
-                                {'id': str(id), 'name': full_name}
-                            )
-        #    fw = FilmworkElastic(**film_for_elastic)
-            #print(fw)
-        #    print('================================================')
-            #print(fw.model_dump_json())
-        #    res = {'_index': settings.index, '_id': film_id, } | fw.model_dump_json()
-        #    print(res)
+                film_for_elastic = (
+                    {'_index': settings.index, '_id': film_id, } |
+                    fw_elastic.model_dump()
+                )
             films_for_elastic.append(film_for_elastic)
         return films_for_elastic
