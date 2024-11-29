@@ -35,6 +35,8 @@ sudo docker compose up
 
 После запуска и загрузки тестовых данных в PostgreSQL из файла /postgres/database_dump.sql начнётся процесс проверки изменений в базе PostgreSQL и загрузка в Elasticsearch.
 
+Для тестирования работы Elasticsearch открыт порт 9200. 
+Пример запроса к Elasticsearch: http://localhost:9200/movies/_search
 ____
 
 **Владимир Нагибин** 
