@@ -2,11 +2,11 @@ version: '3'
 
 volumes:
   content_db:
-  static:
   esdata:
 
 services:
   etl:
+    container_name: etl
     build: etl
     env_file:
       - ./.env
@@ -16,38 +16,12 @@ services:
       elasticsearch:
         condition: service_healthy
 
-  service:
-    build: app
-    expose:
-      - "8000"
-    env_file:
-      - ./.env
-    volumes:
-      - static:/var/www/static
-    depends_on:
-      theatre-db:
-        condition: service_healthy
-
-  nginx:
-    image: nginx:1.27.2
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./configs:/etc/nginx/conf.d:ro
-      - static:/data/static
-    depends_on:
-      - service
-    ports:
-      - "80:80"
-
   elasticsearch:
     container_name: movies-search
     image: elasticsearch:8.6.2
     volumes:
       - esdata:/usr/share/elasticsearch/data
-    #  - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-    #  - ./elasticsearch/data:/usr/share/elasticsearch/data:rw
     environment:
-      #- bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -59,10 +33,10 @@ services:
       timeout: 30s
       retries: 5
 
-  init_elasticsearch:
+  init-elasticsearch:
     container_name: init-movies-search
     build:
-      context: elasticsearch/
+      context: init_elasticsearch/
     depends_on:
       elasticsearch:
         condition: service_healthy
