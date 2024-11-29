@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     index: str
     file_index_scheme: str
 
+
 settings = Settings()
 
 BATCH_SIZE = settings.batch_size

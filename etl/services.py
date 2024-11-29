@@ -19,8 +19,8 @@ class BaseStorage(abc.ABC):
 
 
 class JsonFileStorage(BaseStorage):
-    """Implementation of a storage using a local file.
-
+    """
+    Implementation of a storage using a local file.
     Storage format: JSON
     """
 
